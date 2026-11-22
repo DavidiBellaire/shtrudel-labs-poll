@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<!--
+  היי, מצאת את קוד המקור של הדף.
+  זה בדיוק הדבר הראשון שנלמד בקבוצה.
+  שלחו בוואטסאפ "מצאתי את הקוד" וקבלו בונוס :)
+-->
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shtrudel Labs: המערכת נעולה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root{
+    --navy:#0A1B4D; --deep:#071338; --royal:#1E5BD8; --sky:#4FB3FF;
+    --yellow:#FFC72C; --ice:#BFD4FF; --white:#FFFFFF; --red:#FF8A8A;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:'Heebo',sans-serif;color:var(--white);
+    background-color:var(--navy);
+    background-image:radial-gradient(rgba(79,179,255,0.16) 2px,transparent 2px);
+    background-size:34px 34px;
+    min-height:100vh;overflow-x:hidden;position:relative;
+  }
+  .ring{position:fixed;border-radius:50%;border:2px solid var(--sky);pointer-events:none}
+  .ring.r1{width:520px;height:520px;top:-220px;right:-220px;opacity:.4}
+  .ring.r2{width:600px;height:600px;bottom:-300px;left:-280px;opacity:.25}
+  .star{position:fixed;pointer-events:none;animation:float 6s ease-in-out infinite}
+  .star.s1{top:90px;left:28px;width:30px}
+  .star.s2{top:150px;left:80px;width:16px;animation-delay:1.5s}
+  .star.s3{bottom:110px;right:34px;width:26px;animation-delay:3s}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-10px) rotate(20deg)}}
+
+  main{position:relative;max-width:520px;margin:0 auto;padding:28px 20px 60px;display:flex;flex-direction:column;gap:22px}
+  header{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+  header img{width:128px;height:128px}
+  .status{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;letter-spacing:1px;
+    padding:7px 16px;border-radius:999px;background:var(--deep);border:1px solid rgba(79,179,255,.45);color:var(--red)}
+  .status.open{color:var(--yellow);border-color:var(--yellow)}
+
+  .locks{display:flex;justify-content:center;gap:14px}
+  .lock{width:56px;height:56px;border-radius:16px;background:var(--deep);border:2px solid rgba(79,179,255,.35);
+    display:flex;align-items:center;justify-content:center;transition:all .35s}
+  .lock svg{width:28px;height:28px;stroke:var(--ice)}
+  .lock.current{border-color:var(--sky);box-shadow:0 0 0 4px rgba(79,179,255,.2)}
+  .lock.done{background:var(--yellow);border-color:var(--yellow)}
+  .lock.done svg{stroke:var(--navy)}
+
+  .card{background:var(--deep);border:2px solid rgba(79,179,255,.3);border-radius:28px;padding:26px 22px;
+    display:flex;flex-direction:column;gap:16px;animation:pop .35s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .step{font-size:14px;font-weight:800;color:var(--sky);letter-spacing:.5px}
+  h1,h2{font-family:'Rubik',sans-serif;margin:0;line-height:1.15}
+  h1{font-size:34px;font-weight:900}
+  h2{font-size:28px;font-weight:900}
+  p{margin:0;font-size:18px;line-height:1.55;color:#E3ECFF}
+  .hl{color:var(--yellow)}
+  .code{direction:ltr;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:44px;letter-spacing:10px;
+    background:var(--navy);border-radius:18px;padding:18px 10px;color:var(--yellow)}
+  .abc{direction:ltr;display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:4px;font-family:'JetBrains Mono',monospace;font-size:13px;text-align:center}
+  .abc span{background:var(--navy);border-radius:6px;padding:6px 0;color:var(--ice)}
+  .example{direction:ltr;display:flex;justify-content:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:18px;color:var(--ice)}
+  .example b{color:var(--yellow)}
+
+  form{display:flex;flex-direction:column;gap:10px}
+  label{font-size:15px;font-weight:700;color:var(--ice)}
+  input{direction:ltr;text-align:center;font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;letter-spacing:4px;
+    padding:14px;border-radius:16px;border:2px solid rgba(79,179,255,.5);background:var(--navy);color:var(--white);outline:none;text-transform:uppercase}
+  input:focus{border-color:var(--yellow)}
+  .shake{animation:shake .4s}
+  @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+  button,.btn{font-family:'Rubik',sans-serif;font-size:20px;font-weight:800;border:none;border-radius:16px;padding:16px;min-height:54px;cursor:pointer;
+    background:var(--yellow);color:var(--navy);text-decoration:none;text-align:center;display:block}
+  button.ghost{background:transparent;color:var(--sky);font-size:16px;font-weight:700;padding:8px;min-height:44px}
+  .msg{min-height:24px;font-size:16px;font-weight:700;text-align:center}
+  .msg.bad{color:var(--red)} .msg.good{color:var(--yellow)}
+  .hint{display:none;background:rgba(79,179,255,.12);border-radius:14px;padding:12px 14px;font-size:16px;line-height:1.5;color:var(--ice)}
+  .hint.show{display:block}
+
+  .invite{background:var(--yellow);color:var(--navy);border-radius:22px;padding:20px;text-align:center;display:flex;flex-direction:column;gap:6px}
+  .invite small{font-size:14px;font-weight:800}
+  .invite strong{direction:ltr;font-family:'JetBrains Mono',monospace;font-size:28px;letter-spacing:2px}
+  .wa{background:#FFFFFF}
+  .phone{text-align:center;font-size:15px;color:var(--ice)}
+  .phone span{direction:ltr;unicode-bidi:isolate}
+  .hidden{display:none}
+
+  .confetti{position:fixed;top:-20px;width:10px;height:16px;border-radius:3px;pointer-events:none;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+  @media (prefers-reduced-motion:reduce){.star,.card,.confetti{animation:none}}
+</style>
+</head>
+<body>
+<div class="ring r1" aria-hidden="true"></div>
+<div class="ring r2" aria-hidden="true"></div>
+<svg class="star s1" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5Z" fill="#FFC72C"/></svg>
+<svg class="star s2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5Z" fill="#FFC72C"/></svg>
+<svg class="star s3" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5Z" fill="#FFC72C"/></svg>
+
+<main>
+  <header>
+    <img src="logo.png" alt="Shtrudel Labs">
+    <div class="status" id="status">ACCESS: LOCKED</div>
+  </header>
+
+  <div class="locks" id="locks" aria-label="התקדמות: 3 מנעולים"></div>
+
+  <!-- פתיחה -->
+  <section class="card" id="s0">
+    <h1>המערכת של Shtrudel Labs <span class="hl">נעולה.</span></h1>
+    <p>יש עליה 3 מנעולים. כל מנעול נפתח עם מילה סודית.</p>
+    <p>פתחו את שלושתם, ותקבלו <b class="hl">הזמנה אישית</b> לקבוצה.</p>
+    <p>לא צריך לדעת שום דבר על מחשבים. מבטיחים.</p>
+    <button type="button" id="start">יאללה, מתחילים</button>
+  </section>
+
+  <!-- מנעול 1 -->
+  <section class="card hidden" id="s1">
+    <div class="step">מנעול 1 מתוך 3</div>
+    <h2>הכל הפוך פה</h2>
+    <p>המחשב שלנו התבלבל וכתב את הסיסמה מהסוף להתחלה:</p>
+    <div class="code">SBAL</div>
+    <form data-step="1">
+      <label for="a1">מה הסיסמה האמיתית?</label>
+      <input id="a1" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12">
+      <button type="submit">לפתוח את המנעול</button>
+      <div class="msg" aria-live="polite"></div>
+      <div class="hint">רמז: תקראו את האותיות מהאחרונה לראשונה. האות האחרונה היא L.</div>
+      <button type="button" class="ghost" data-hint>צריכים רמז?</button>
+    </form>
+  </section>
+
+  <!-- מנעול 2 -->
+  <section class="card hidden" id="s2">
+    <div class="step">מנעול 2 מתוך 3</div>
+    <h2>הצופן של הרובוט</h2>
+    <p>הרובוט מצפין כל אות על ידי כך שהוא מזיז אותה <b class="hl">צעד אחד קדימה</b> באלף בית.</p>
+    <div class="example"><span>C</span><span>→</span><b>D</b><span>&nbsp;&nbsp;</span><span>A</span><span>→</span><b>B</b></div>
+    <p>כדי לפענח, מזיזים כל אות צעד אחד אחורה. זה המסר המוצפן:</p>
+    <div class="code">DPEF</div>
+    <div class="abc" aria-label="האלף בית באנגלית"></div>
+    <form data-step="2">
+      <label for="a2">מה המילה המפוענחת?</label>
+      <input id="a2" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12">
+      <button type="submit">לפתוח את המנעול</button>
+      <div class="msg" aria-live="polite"></div>
+      <div class="hint">רמז: האות D הופכת ל-C. עכשיו תעשו אותו דבר ל-P, E ו-F. זו מילה שתשמעו אצלנו הרבה.</div>
+      <button type="button" class="ghost" data-hint>צריכים רמז?</button>
+    </form>
+  </section>
+
+  <!-- מנעול 3 -->
+  <section class="card hidden" id="s3">
+    <div class="step">מנעול 3 מתוך 3</div>
+    <h2>המנעול האחרון: שעה סודית</h2>
+    <p>הסיסמה האחרונה היא מספר: <b class="hl">השעה שבה נפגשים כל יום ראשון.</b></p>
+    <p>היא מסתתרת בסטורי האחרון שלנו, וגם בפלייר.</p>
+    <form data-step="3">
+      <label for="a3">מה השעה? (4 ספרות)</label>
+      <input id="a3" inputmode="numeric" autocomplete="off" maxlength="6">
+      <button type="submit">לפתוח את המנעול</button>
+      <div class="msg" aria-live="polite"></div>
+      <div class="hint">רמז: רבע לשבע בערב. בשעון של 24 שעות זה מתחיל ב-18.</div>
+      <button type="button" class="ghost" data-hint>צריכים רמז?</button>
+    </form>
+  </section>
+
+  <!-- ניצחון -->
+  <section class="card hidden" id="win">
+    <h1>פתחתם את המערכת!</h1>
+    <p>שלוש סיסמאות, שלושה מנעולים. מה שעשיתם עכשיו זה בדיוק מה שמתכנתים עושים: קוראים קוד, מפענחים ופותרים בעיות.</p>
+    <div class="invite">
+      <small>קוד ההזמנה האישי שלך</small>
+      <strong>LABS-CODE-1845</strong>
+    </div>
+    <a class="btn wa" id="wa" href="#">שלחו לי את הקוד בוואטסאפ</a>
+    <button type="button" id="copy">להעתיק את הקוד</button>
+    <div class="phone">או שלחו את הקוד למספר <span>054-2962245</span></div>
+  </section>
+</main>
+
+<script>
+(function(){
+  console.log("%cהיי האקר :) מצאת את הקונסול. בקבוצה נלמד מה כל זה אומר.", "color:#FFC72C;font-size:16px;font-weight:bold");
+
+  var ANSWERS = {1:["LABS"], 2:["CODE"], 3:["1845"]};
+  var INVITE = "LABS-CODE-1845";
+  var WRONG = ["כמעט! נסו שוב", "לא נורא, גם מחשבים טועים", "עוד ניסיון אחד", "חם, חם... נסו שוב"];
+  var lockSVG = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  var openSVG = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>';
+
+  var locks = document.getElementById('locks');
+  for (var i = 1; i <= 3; i++) {
+    var d = document.createElement('div');
+    d.className = 'lock'; d.id = 'lock' + i; d.innerHTML = lockSVG;
+    locks.appendChild(d);
+  }
+  var abc = document.querySelector('.abc');
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(function(ch){
+    var s = document.createElement('span'); s.textContent = ch; abc.appendChild(s);
+  });
+
+  function show(id){
+    ['s0','s1','s2','s3','win'].forEach(function(x){ document.getElementById(x).classList.add('hidden'); });
+    var el = document.getElementById(id); el.classList.remove('hidden');
+    var inp = el.querySelector('input'); if (inp) { setTimeout(function(){ try{inp.focus();}catch(e){} }, 50); }
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  function setCurrent(n){
+    for (var i = 1; i <= 3; i++) document.getElementById('lock'+i).classList.toggle('current', i === n);
+  }
+  function norm(v){ return (v || "").toUpperCase().replace(/[\s:.\-]/g, ""); }
+
+  document.getElementById('start').addEventListener('click', function(){ show('s1'); setCurrent(1); });
+
+  document.querySelectorAll('form').forEach(function(f){
+    var step = +f.dataset.step, tries = 0;
+    var input = f.querySelector('input'), msg = f.querySelector('.msg'), hint = f.querySelector('.hint');
+    f.querySelector('[data-hint]').addEventListener('click', function(){ hint.classList.add('show'); this.style.display='none'; });
+    f.addEventListener('submit', function(e){
+      e.preventDefault();
+      if (ANSWERS[step].indexOf(norm(input.value)) !== -1) {
+        msg.className = 'msg good'; msg.textContent = 'נפתח!';
+        var l = document.getElementById('lock'+step);
+        l.classList.remove('current'); l.classList.add('done'); l.innerHTML = openSVG;
+        setTimeout(function(){
+          if (step < 3) { show('s'+(step+1)); setCurrent(step+1); }
+          else { win(); }
+        }, 650);
+      } else {
+        tries++;
+        msg.className = 'msg bad'; msg.textContent = WRONG[(tries-1) % WRONG.length];
+        input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake');
+        if (tries >= 2) { hint.classList.add('show'); f.querySelector('[data-hint]').style.display='none'; }
+      }
+    });
+  });
+
+  function win(){
+    var st = document.getElementById('status');
+    st.textContent = 'ACCESS: GRANTED'; st.classList.add('open');
+    var text = "היי! פתרתי את החידה של Shtrudel Labs. קוד ההזמנה שלי: " + INVITE;
+    document.getElementById('wa').href = "https://wa.me/972542962245?text=" + encodeURIComponent(text);
+    show('win');
+    var colors = ['#FFC72C','#4FB3FF','#FFFFFF','#1E5BD8'];
+    for (var i = 0; i < 70; i++) {
+      var c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random()*100 + 'vw';
+      c.style.background = colors[i % colors.length];
+      c.style.animationDuration = (2 + Math.random()*2.5) + 's';
+      c.style.animationDelay = (Math.random()*0.6) + 's';
+      document.body.appendChild(c);
+      setTimeout((function(el){ return function(){ el.remove(); }; })(c), 5500);
+    }
+  }
+
+  document.getElementById('copy').addEventListener('click', function(){
+    var b = this;
+    try {
+      navigator.clipboard.writeText(INVITE).then(function(){ b.textContent = 'הועתק!'; }, function(){ b.textContent = INVITE; });
+    } catch(e) { b.textContent = INVITE; }
+  });
+})();
+</script>
+</body>
+</html>

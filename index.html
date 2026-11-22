@@ -45,6 +45,17 @@
   .btn{display:block;text-decoration:none;font-family:'Rubik',sans-serif;font-weight:800;font-size:19px;background:var(--yellow);color:var(--navy);
     border-radius:16px;padding:16px;min-height:54px;text-align:center;width:100%}
 
+  .res{display:flex;flex-direction:column;gap:18px;text-align:right;width:100%}
+  .res h3{margin:0;font-family:'Rubik',sans-serif;font-size:22px;font-weight:900;display:flex;align-items:center;gap:10px}
+  .rq{background:var(--navy);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .rq .t{font-weight:800;font-size:16px}
+  .rq .n{font-size:13px;color:var(--ice)}
+  .rrow{display:flex;flex-direction:column;gap:4px}
+  .rrow .l{display:flex;justify-content:space-between;font-size:14px;font-weight:700}
+  .rrow .l b{direction:ltr;font-family:'Rubik',sans-serif}
+  .rrow .tr{height:10px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden;position:relative}
+  .rrow .fi{position:absolute;top:0;right:0;height:100%;border-radius:5px;transition:width .6s ease}
+  .rrow.mine .l{color:var(--yellow)}
   /* ---------- presenter (screen) ---------- */
   #screen{min-height:100vh;padding:48px 64px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:56px;align-items:center}
   .s-head{display:flex;align-items:center;gap:18px;margin-bottom:28px}
@@ -94,6 +105,10 @@
   <section class="qcard done hidden" id="done">
     <h2>סבבה, הצבעתם! עכשיו תסתכלו על המסך</h2>
     <p>את הסקר הזה בנינו בשביל קציר בכמה דקות. תחשבו מה אתם תבנו בשנה.</p>
+    <div class="res">
+      <h3><span class="live"><i></i>לייב</span>מה קציר ענתה עד עכשיו</h3>
+      <div id="myResults" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
     <a class="btn" href="riddle/">רגע, יש עוד משהו: המערכת נעולה</a>
   </section>
 </main>
@@ -140,6 +155,19 @@
   function storeGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
   function storeSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
 
+  function fetchCounts(){
+    return fetch(SUPABASE_URL + "/rest/v1/rpc/poll_counts", {method: "POST", headers: HEADERS, body: "{}"})
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){
+        var next = {};
+        (rows || []).forEach(function(r){
+          if (!next[r.question]) next[r.question] = [0,0,0,0];
+          if (r.option >= 0 && r.option < 4) next[r.question][r.option] = Number(r.votes) || 0;
+        });
+        return next;
+      });
+  }
+
   var isScreen = location.hash === "#screen";
   if (isScreen) startScreen(); else startVoter();
 
@@ -162,6 +190,7 @@
       if (current >= QUESTIONS.length) {
         document.getElementById("qcard").classList.add("hidden");
         document.getElementById("done").classList.remove("hidden");
+        startResults();
         return;
       }
       var Q = QUESTIONS[current];
@@ -190,6 +219,7 @@
         body: JSON.stringify({question: current+1, option: idx, voter: voter})
       }).then(function(r){
         if (r.ok || r.status === 409) {
+          storeSet("sl_pick_" + (current+1), String(idx));
           setTimeout(function(){ current++; storeSet("sl_step", String(current)); render(); }, 350);
         } else { throw new Error(r.status); }
       }).catch(function(){
@@ -197,6 +227,40 @@
         all.forEach(function(b){ b.disabled = false; });
         btn.classList.remove("picked");
       });
+    }
+    var resultsOn = false;
+    function startResults(){
+      if (resultsOn) return; resultsOn = true;
+      var box = document.getElementById("myResults");
+      QUESTIONS.forEach(function(Q, qi){
+        var card = document.createElement("div"); card.className = "rq";
+        var t = document.createElement("div"); t.className = "t"; t.textContent = Q.q; card.appendChild(t);
+        var mine = storeGet("sl_pick_" + (qi+1));
+        Q.o.forEach(function(text, oi){
+          var row = document.createElement("div"); row.className = "rrow" + (String(oi) === mine ? " mine" : "");
+          row.innerHTML = '<div class="l"><span></span><b>0%</b></div><div class="tr"><div class="fi"></div></div>';
+          row.querySelector("span").textContent = text + (String(oi) === mine ? " (אתם)" : "");
+          row.querySelector(".fi").style.background = COLORS[oi];
+          card.appendChild(row);
+        });
+        var n = document.createElement("div"); n.className = "n"; card.appendChild(n);
+        box.appendChild(card);
+      });
+      function update(){
+        fetchCounts().then(function(counts){
+          Array.prototype.forEach.call(box.children, function(card, qi){
+            var c = counts[qi+1] || [0,0,0,0];
+            var total = c.reduce(function(a,b){ return a+b; }, 0);
+            Array.prototype.forEach.call(card.querySelectorAll(".rrow"), function(row, oi){
+              var pct = total ? Math.round(c[oi] * 100 / total) : 0;
+              row.querySelector("b").textContent = pct + "%";
+              row.querySelector(".fi").style.width = pct + "%";
+            });
+            card.querySelector(".n").textContent = total + " הצבעות";
+          });
+        }).catch(function(){});
+      }
+      update(); setInterval(update, 3000);
     }
     render();
   }
@@ -239,16 +303,7 @@
     }
 
     function poll(){
-      fetch(SUPABASE_URL + "/rest/v1/rpc/poll_counts", {method: "POST", headers: HEADERS, body: "{}"})
-        .then(function(r){ return r.ok ? r.json() : []; })
-        .then(function(rows){
-          var next = {};
-          (rows || []).forEach(function(r){
-            if (!next[r.question]) next[r.question] = [0,0,0,0];
-            if (r.option >= 0 && r.option < 4) next[r.question][r.option] = Number(r.votes) || 0;
-          });
-          counts = next; draw();
-        }).catch(function(){});
+      fetchCounts().then(function(next){ counts = next; draw(); }).catch(function(){});
     }
 
     function go(d){ shown = (shown + d + QUESTIONS.length) % QUESTIONS.length; draw(); }

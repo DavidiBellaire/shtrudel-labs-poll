@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shtrudel Labs: סקר חי</title>
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@700;800;900&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{--navy:#0A1B4D;--deep:#071338;--royal:#1E5BD8;--sky:#4FB3FF;--yellow:#FFC72C;--ice:#BFD4FF}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{font-family:'Heebo',sans-serif;color:#fff;background-color:var(--navy);
+    background-image:radial-gradient(rgba(79,179,255,.16) 2px,transparent 2px);background-size:34px 34px;min-height:100vh}
+  .hidden{display:none!important}
+  h1,h2{font-family:'Rubik',sans-serif;margin:0;line-height:1.15}
+
+  /* ---------- voter (phone) ---------- */
+  #voter{max-width:520px;margin:0 auto;padding:24px 18px 48px;display:flex;flex-direction:column;gap:20px}
+  .top{display:flex;align-items:center;gap:12px}
+  .top img{width:64px;height:64px}
+  .top .t1{font-family:'Rubik',sans-serif;font-weight:900;font-size:22px}
+  .top .t2{font-size:14px;color:var(--ice)}
+  .live{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#fff;background:#E5484D;border-radius:999px;padding:4px 12px}
+  .live i{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.2s infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .progress{display:flex;gap:6px}
+  .progress span{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.15)}
+  .progress span.on{background:var(--yellow)}
+  .qcard{background:var(--deep);border:2px solid rgba(79,179,255,.3);border-radius:26px;padding:24px 18px;display:flex;flex-direction:column;gap:14px;animation:pop .3s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .qnum{font-size:14px;font-weight:800;color:var(--sky)}
+  .qcard h2{font-size:28px;font-weight:900}
+  .opt{font-family:'Heebo',sans-serif;font-size:19px;font-weight:700;text-align:right;color:#fff;background:var(--navy);
+    border:2px solid rgba(79,179,255,.45);border-radius:16px;padding:16px 18px;min-height:56px;cursor:pointer;transition:transform .1s}
+  .opt:active{transform:scale(.98)}
+  .opt.picked{background:var(--yellow);border-color:var(--yellow);color:var(--navy)}
+  .opt:disabled{cursor:default}
+  .err{color:#FF8A8A;font-weight:700;text-align:center;min-height:22px}
+  .done{text-align:center;align-items:center}
+  .done h2{font-size:32px}
+  .done p{margin:0;font-size:18px;line-height:1.55;color:#E3ECFF}
+  .btn{display:block;text-decoration:none;font-family:'Rubik',sans-serif;font-weight:800;font-size:19px;background:var(--yellow);color:var(--navy);
+    border-radius:16px;padding:16px;min-height:54px;text-align:center;width:100%}
+
+  /* ---------- presenter (screen) ---------- */
+  #screen{min-height:100vh;padding:48px 64px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:56px;align-items:center}
+  .s-head{display:flex;align-items:center;gap:18px;margin-bottom:28px}
+  .s-head img{width:86px;height:86px}
+  .s-head .live{font-size:18px;padding:6px 16px}
+  .s-count{font-size:22px;color:var(--ice);font-weight:700}
+  .s-q{font-size:58px;font-weight:900;margin-bottom:36px}
+  .s-qnum{font-size:22px;font-weight:800;color:var(--sky);margin-bottom:10px}
+  .bars{display:flex;flex-direction:column;gap:26px}
+  .bar{display:flex;flex-direction:column;gap:10px}
+  .bar .lbl{display:flex;align-items:baseline;justify-content:space-between;font-size:30px;font-weight:800}
+  .bar .pct{font-family:'Rubik',sans-serif;font-size:36px;direction:ltr}
+  .bar .track{position:relative;height:34px;border-radius:17px;background:rgba(255,255,255,.1);overflow:hidden}
+  .bar .fill{position:absolute;top:0;right:0;height:100%;border-radius:17px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  .bar.lead .name{color:var(--yellow)}
+  .nav{display:flex;gap:14px;margin-top:34px}
+  .nav button{font-family:'Rubik',sans-serif;font-size:20px;font-weight:800;border:2px solid var(--sky);background:transparent;color:#fff;border-radius:14px;padding:12px 24px;cursor:pointer;min-height:48px}
+  .nav button:hover{background:rgba(79,179,255,.15)}
+  .join{background:#fff;color:var(--navy);border-radius:32px;padding:28px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+  .join h3{margin:0;font-family:'Rubik',sans-serif;font-size:30px;font-weight:900}
+  #qr{width:290px;height:290px}
+  #qr img,#qr canvas{width:290px!important;height:290px!important}
+  .join .url{direction:ltr;font-size:15px;font-weight:700;word-break:break-all;color:#3A4A78}
+  .tip{position:fixed;bottom:12px;left:16px;font-size:13px;color:rgba(191,212,255,.6)}
+  @media (max-width:900px){#screen{grid-template-columns:1fr;padding:28px}.s-q{font-size:36px}.bar .lbl{font-size:20px}}
+  @media (prefers-reduced-motion:reduce){.qcard,.live i{animation:none}.bar .fill{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- ===== מסך ההצבעה (טלפון) ===== -->
+<main id="voter">
+  <div class="top">
+    <img src="logo.png" alt="Shtrudel Labs">
+    <div>
+      <div class="t1">מה קציר חושבת?</div>
+      <div class="live"><i></i>לייב</div>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+  <section class="qcard" id="qcard">
+    <div class="qnum" id="qnum"></div>
+    <h2 id="qtext"></h2>
+    <div id="opts" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="err" id="err" aria-live="polite"></div>
+  </section>
+  <section class="qcard done hidden" id="done">
+    <h2>סבבה, הצבעתם! עכשיו תסתכלו על המסך</h2>
+    <p>את הסקר הזה בנינו בשביל קציר בערך בשעה. תחשבו מה אתם תבנו בשנה.</p>
+    <a class="btn" href="https://claude.ai/artifact/T2ZUDWxdRJybHyQq31bnck">רגע, יש עוד משהו: המערכת נעולה</a>
+  </section>
+</main>
+
+<!-- ===== מסך ההקרנה ===== -->
+<main id="screen" class="hidden">
+  <section>
+    <div class="s-head">
+      <img src="logo.png" alt="Shtrudel Labs">
+      <div class="live"><i></i>לייב</div>
+      <div class="s-count" id="sCount"></div>
+    </div>
+    <div class="s-qnum" id="sQnum"></div>
+    <h1 class="s-q" id="sQ"></h1>
+    <div class="bars" id="bars"></div>
+    <div class="nav">
+      <button type="button" id="prev">→ הקודמת</button>
+      <button type="button" id="next">הבאה ←</button>
+    </div>
+  </section>
+  <aside class="join">
+    <h3>סרקו והצביעו</h3>
+    <div id="qr"></div>
+    <div class="url" id="joinUrl"></div>
+  </aside>
+  <div class="tip">חיצים במקלדת מחליפים שאלה</div>
+</main>
+
+<script>
+(function(){
+  var SUPABASE_URL = "https://yijlyokigdgyhiainxum.supabase.co";
+  var KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlpamx5b2tpZ2RneWhpYWlueHVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUzNDY1MzYsImV4cCI6MjExMDkyMjUzNn0.Vn86CbZb1EXO0Gzt9RUOw_xzbiP9F8gAu3DPV4qmz5M";
+  var HEADERS = {"apikey": KEY, "Authorization": "Bearer " + KEY, "Content-Type": "application/json"};
+
+  var QUESTIONS = [
+    {q: "מה הכי מעצבן ביום לימודים?", o: ["לקום ב-7 בבוקר", "שאי אפשר להיות בטיקטוק", "שיעורי בית אחרי יום שלם", "3 מבחנים באותו שבוע"]},
+    {q: "יצא לכם פעם לכתוב קוד?", o: ["אף פעם, מה זה בכלל", "ניסיתי פעם, לא הבנתי כלום", "כן, קצת", "כן, אני בעניין"]},
+    {q: "אם הייתם מנהלים את בית הספר ליום אחד, מה הייתם משנים?", o: ["מתחילים ב-10", "הפסקה של שעה", "בלי מבחנים, רק פרויקטים", "טלפונים מותרים"]},
+    {q: "איך אתם לומדים למבחן? בכנות", o: ["סיכומים, הכל מסודר", "עם החברים", "סרטונים ביוטיוב", "לילה לפני ומקווים לטוב"]},
+    {q: "אם הייתם יכולים לבנות כל דבר, מה זה היה?", o: ["משחק שכולם מתמכרים אליו", "אפליקציה שעוזרת לאנשים", "חנות אונליין משלי", "בוט AI משלי"]}
+  ];
+  var COLORS = ["#FFC72C", "#4FB3FF", "#9CC9FF", "#FFFFFF"];
+
+  function storeGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function storeSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+
+  var isScreen = location.hash === "#screen";
+  if (isScreen) startScreen(); else startVoter();
+
+  /* ---------- voter ---------- */
+  function startVoter(){
+    var voter = storeGet("sl_voter");
+    if (!voter) {
+      voter = "v" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      storeSet("sl_voter", voter);
+    }
+    var current = parseInt(storeGet("sl_step") || "0", 10);
+    if (isNaN(current) || current < 0) current = 0;
+
+    var prog = document.getElementById("progress");
+    QUESTIONS.forEach(function(){ prog.appendChild(document.createElement("span")); });
+
+    function render(){
+      var spans = prog.querySelectorAll("span");
+      spans.forEach(function(s,i){ s.classList.toggle("on", i < current); });
+      if (current >= QUESTIONS.length) {
+        document.getElementById("qcard").classList.add("hidden");
+        document.getElementById("done").classList.remove("hidden");
+        return;
+      }
+      var Q = QUESTIONS[current];
+      document.getElementById("qnum").textContent = "שאלה " + (current+1) + " מתוך " + QUESTIONS.length;
+      document.getElementById("qtext").textContent = Q.q;
+      document.getElementById("err").textContent = "";
+      var box = document.getElementById("opts");
+      box.innerHTML = "";
+      Q.o.forEach(function(text, idx){
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "opt"; b.textContent = text;
+        b.addEventListener("click", function(){ vote(idx, b); });
+        box.appendChild(b);
+      });
+      var card = document.getElementById("qcard");
+      card.style.animation = "none"; void card.offsetWidth; card.style.animation = "";
+    }
+
+    function vote(idx, btn){
+      var all = document.querySelectorAll(".opt");
+      all.forEach(function(b){ b.disabled = true; });
+      btn.classList.add("picked");
+      fetch(SUPABASE_URL + "/rest/v1/poll_votes", {
+        method: "POST",
+        headers: Object.assign({"Prefer": "return=minimal"}, HEADERS),
+        body: JSON.stringify({question: current+1, option: idx, voter: voter})
+      }).then(function(r){
+        if (r.ok || r.status === 409) {
+          setTimeout(function(){ current++; storeSet("sl_step", String(current)); render(); }, 350);
+        } else { throw new Error(r.status); }
+      }).catch(function(){
+        document.getElementById("err").textContent = "אופס, משהו נתקע. תלחצו שוב";
+        all.forEach(function(b){ b.disabled = false; });
+        btn.classList.remove("picked");
+      });
+    }
+    render();
+  }
+
+  /* ---------- screen ---------- */
+  function startScreen(){
+    document.getElementById("voter").classList.add("hidden");
+    document.getElementById("screen").classList.remove("hidden");
+    var joinUrl = location.href.split("#")[0];
+    document.getElementById("joinUrl").textContent = joinUrl.replace(/^https?:\/\//, "");
+    try { new QRCode(document.getElementById("qr"), {text: joinUrl, width: 580, height: 580, colorDark: "#0A1B4D", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.M}); } catch(e){}
+
+    var shown = 0, counts = {};
+    var bars = document.getElementById("bars");
+
+    function draw(){
+      var Q = QUESTIONS[shown];
+      document.getElementById("sQnum").textContent = "שאלה " + (shown+1) + " מתוך " + QUESTIONS.length;
+      document.getElementById("sQ").textContent = Q.q;
+      var c = counts[shown+1] || [0,0,0,0];
+      var total = c.reduce(function(a,b){ return a+b; }, 0);
+      var max = Math.max.apply(null, c);
+      document.getElementById("sCount").textContent = total + " הצבעות לשאלה הזאת";
+      if (bars.children.length !== 4 || bars.dataset.q !== String(shown)) {
+        bars.innerHTML = ""; bars.dataset.q = String(shown);
+        Q.o.forEach(function(text, i){
+          var d = document.createElement("div"); d.className = "bar";
+          d.innerHTML = '<div class="lbl"><span class="name"></span><span class="pct"></span></div><div class="track"><div class="fill"></div></div>';
+          d.querySelector(".fill").style.background = COLORS[i];
+          d.querySelector(".name").textContent = text;
+          bars.appendChild(d);
+        });
+      }
+      Array.prototype.forEach.call(bars.children, function(d, i){
+        var pct = total ? Math.round(c[i] * 100 / total) : 0;
+        d.querySelector(".fill").style.width = (total ? Math.max(pct, 2) : 0) + "%";
+        d.querySelector(".pct").textContent = pct + "%";
+        d.classList.toggle("lead", total > 0 && c[i] === max);
+      });
+    }
+
+    function poll(){
+      fetch(SUPABASE_URL + "/rest/v1/rpc/poll_counts", {method: "POST", headers: HEADERS, body: "{}"})
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .then(function(rows){
+          var next = {};
+          (rows || []).forEach(function(r){
+            if (!next[r.question]) next[r.question] = [0,0,0,0];
+            if (r.option >= 0 && r.option < 4) next[r.question][r.option] = Number(r.votes) || 0;
+          });
+          counts = next; draw();
+        }).catch(function(){});
+    }
+
+    function go(d){ shown = (shown + d + QUESTIONS.length) % QUESTIONS.length; draw(); }
+    document.getElementById("next").addEventListener("click", function(){ go(1); });
+    document.getElementById("prev").addEventListener("click", function(){ go(-1); });
+    document.addEventListener("keydown", function(e){
+      if (e.key === "ArrowLeft" || e.key === " ") go(1);
+      if (e.key === "ArrowRight") go(-1);
+    });
+    draw(); poll(); setInterval(poll, 1500);
+  }
+})();
+</script>
+</body>
+</html>
